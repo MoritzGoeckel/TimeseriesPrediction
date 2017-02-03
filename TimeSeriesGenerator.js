@@ -11,6 +11,10 @@ module.exports = class{
         return this.normalSeries(x)+Math.sin(Math.PI*x/0.3)*0.05;
     }
 
+    normalSeriesBias(x){
+        return this.simpleSeries(x) + Math.sin(Math.PI*x/1)*0.2 + x/20;
+    }
+
     generateSeries(fn, steps, max){
         let output = [];
         for(let i = 0; i < max; i += max / steps)

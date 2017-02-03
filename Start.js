@@ -24,6 +24,7 @@ let condition = function(now, future)
 
 let li = new LearningIndicator(sma, 40, 1, 5, condition);
 
+
 for(let i in series)
 {
     li.push(series[i]);

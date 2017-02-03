@@ -58,6 +58,8 @@ module.exports = class{
                 let wight = delta / this.learningPeriod;
 
                 this.lookupTable[usedIndicatorValue].value = (1 - wight) * this.lookupTable[usedIndicatorValue].value + wight * result;
+                this.lookupTable[usedIndicatorValue].lastEntry = this.history[0].timestamp;
+
                 this.history.shift();
             }
             else
