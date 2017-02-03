@@ -1,3 +1,5 @@
+//https://www.npmjs.com/package/technicalindicators
+
 module.exports = class{
     constructor(indicator, learningPeriod, lookupResolution, conditionTimeframe, conditionFunction){
         this.lastRecievedTimestamp = -1;
@@ -65,6 +67,6 @@ module.exports = class{
 
     getPrediction(){
         let usedIndicatorValue = Math.floor(this.lastIndicatorValue * Math.pow(10, this.lookupResolution)) / Math.pow(10, this.lookupResolution);
-        return this.lookupTable[usedIndicatorValue];
+        return this.lookupTable[usedIndicatorValue].value;
     }
 }

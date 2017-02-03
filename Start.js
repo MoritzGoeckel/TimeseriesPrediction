@@ -1,10 +1,11 @@
 const TimeSeriesGenerator = require("./TimeSeriesGenerator.js");
 const LearningIndicator = require("./LearningIndicator.js");
 const Indicators = require('technicalindicators');
+const ValueMinusIndicator = require("./indicators/ValueMinusIndicator.js");
 
 let gen = new TimeSeriesGenerator();
 let series = gen.generateSeries(gen.simpleSeries, 40 * 10, 40);
-var sma = new Indicators.SMA({period : 5, values : []});
+var sma = new ValueMinusIndicator(new Indicators.SMA({period : 5, values : []}));
 
 let condition = function(now, future)
 {
