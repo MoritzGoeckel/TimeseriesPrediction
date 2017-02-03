@@ -75,4 +75,9 @@ module.exports = class{
         else
             return undefined;
     }
+
+    getLookupTable()
+    {
+        return this.lookupTable;
+    }
 }
