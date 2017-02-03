@@ -1,0 +1,45 @@
+<html>
+    <head>
+    </head>
+    <body>
+
+        <canvas id="myChart" width="60%" height="30%"></canvas>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
+        <script
+            src="https://code.jquery.com/jquery-3.1.1.min.js"
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin="anonymous"></script>
+        
+        <script>
+            $(document).ready(function(){
+                $.getJSON( "/api", function( resp ) {
+                    var ctx = document.getElementById("myChart").getContext("2d");
+                    
+                    let colors = ["red", "green", "yellow", "violet", "gold", "grey", "brown", "purple", "red", "green", "yellow", "violet", "gold", "grey", "brown", "purple"]
+
+                    var datasets = [];
+                    for(let i in resp.datasets)
+                    {
+                        datasets.push({
+                            label: resp.datasets[i].name,
+                            fill: false,
+                            borderColor: colors[i],
+                            borderWidth: "5px",
+                            data: resp.datasets[i].data
+                        });
+                    }
+
+                    var data = {
+                        labels: resp.dates,
+                        datasets: datasets
+                    };
+
+                    var myRadarChart = new Chart(ctx, {
+                        type: 'line',
+                        data: data
+                    });
+                }); 
+            });
+        </script>
+    </body>
+</html>
