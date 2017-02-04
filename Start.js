@@ -31,7 +31,7 @@ var macd = new ChooseAttributeIndicator(new Indicators.MACD({values : [],
   SimpleMAOscillator: false,
   SimpleMASignal    : false}), "histogram");
 
-let li = new LearningIndicator(macd, 100, 3, 5, condition);
+let li = new LearningIndicator(macd, 100, 10, 5, condition);
 
 let data = {datasets:[], dates:[]};
 

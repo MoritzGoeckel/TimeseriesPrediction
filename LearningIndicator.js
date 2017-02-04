@@ -13,6 +13,9 @@ module.exports = class{
         this.conditionFunction = conditionFunction;
         this.conditionTimeframe = conditionTimeframe;
         this.lastIndicatorValue = undefined;
+
+        this.maxSeenValue = -100000;
+        this.minSeenValue = 100000;
     }
 
     push(entry){
@@ -21,6 +24,12 @@ module.exports = class{
             this.lastRecievedTimestamp = entry.timestamp;
             let indicatorValue = this.indicator.nextValue(entry.value);
             this.lastIndicatorValue = indicatorValue;
+
+            if(indicatorValue > this.maxSeenValue)
+                this.maxSeenValue = indicatorValue;
+            if(indicatorValue < this.minSeenValue)
+                this.minSeenValue = indicatorValue;
+
             this.history.push({timestamp:entry.timestamp, value:entry.value, indicator:indicatorValue})
         }
         else
@@ -49,7 +58,10 @@ module.exports = class{
                     throw new Error("Result should be 0 or 1 or -1");
 
                 let indicatorValue = this.history[0].indicator;
-                let usedIndicatorValue = Math.floor(indicatorValue * Math.pow(10, this.lookupResolution)) / Math.pow(10, this.lookupResolution);
+                let stepsize = (this.maxSeenValue - this.minSeenValue) / this.lookupResolution;
+                let usedIndicatorValue = Math.floor((indicatorValue - this.minSeenValue) / stepsize);
+
+                console.log(indicatorValue + " => " + usedIndicatorValue);
 
                 if(this.lookupTable[usedIndicatorValue] == undefined)
                     this.lookupTable[usedIndicatorValue] = {value:0, lastEntry:this.history[0].timestamp};
@@ -68,8 +80,9 @@ module.exports = class{
     }
 
     getPrediction(){
-        let usedIndicatorValue = Math.floor(this.lastIndicatorValue * Math.pow(10, this.lookupResolution)) / Math.pow(10, this.lookupResolution);
-        
+        let stepsize = (this.maxSeenValue - this.minSeenValue) / this.lookupResolution;
+        let usedIndicatorValue = Math.floor((this.lastIndicatorValue - this.minSeenValue) / stepsize);
+
         if(this.lookupTable[usedIndicatorValue] != undefined)
             return this.lookupTable[usedIndicatorValue].value;
         else
