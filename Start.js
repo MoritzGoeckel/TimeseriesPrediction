@@ -1,8 +1,8 @@
 const TimeSeriesGenerator = require("./TimeSeriesGenerator.js");
 const LearningIndicator = require("./LearningIndicator.js");
 const Indicators = require('technicalindicators');
-const ValueMinusIndicator = require("./indicators/ValueMinusIndicator.js");
-const ChooseAttributeIndicator = require("./indicators/ChooseAttributeIndicator.js");
+const ValueMinusIndicator = require("./indicator_wrapper/ValueMinusIndicator.js");
+const ChooseAttributeIndicator = require("./indicator_wrapper/ChooseAttributeIndicator.js");
 
 const WebServer = require("./WebServer.js");
 
