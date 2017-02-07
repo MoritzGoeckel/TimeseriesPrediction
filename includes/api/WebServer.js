@@ -14,10 +14,7 @@ module.exports = class{
 
         rest.get('/api', function(req, rest) {
             //req.params.query
-
             return rest.ok(data);
-            
-
         });
 
         let listener = exp.listen(this.port, function(){
