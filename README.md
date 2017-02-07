@@ -1,5 +1,5 @@
-#Arbitrage Trader
-This is a NodeJS script to oversee the bitcoin markets for possible arbitrage opportunities. It is connected to a redis database.
+#Time Series Prediction
+This is a collection of NodeJS scripts to analyse and predict data. The main purpose is the analysis of financial data. It is connected to a redis database.
 
 ##Dependencies
 install these via npm
