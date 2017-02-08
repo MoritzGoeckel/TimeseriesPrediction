@@ -3,7 +3,7 @@
     </head>
     <body>
 
-        <canvas id="myChart" width="60%" height="30%"></canvas>
+        <canvas id="myChart" width="100px" height="50px"></canvas>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
         <script
             src="https://code.jquery.com/jquery-3.1.1.min.js"
@@ -20,19 +20,27 @@
                     var datasets = [];
                     for(let i in resp.datasets)
                     {
+                        let onlyValues = [];
+                        for(let a in resp.datasets[i].data)
+                        {
+                            onlyValues.push(resp.datasets[i].data[a].value);
+                        }
+
                         datasets.push({
                             label: resp.datasets[i].name,
                             fill: false,
                             borderColor: colors[i],
                             borderWidth: "5px",
-                            data: resp.datasets[i].data
+                            data: onlyValues
                         });
                     }
 
-                    var data = {
+                    let data = {
                         labels: resp.dates,
                         datasets: datasets
                     };
+
+                    console.log(data);
 
                     var myRadarChart = new Chart(ctx, {
                         type: 'line',

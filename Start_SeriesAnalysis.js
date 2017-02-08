@@ -1,15 +1,25 @@
-const TSG = require("./TimeSeriesGeneratorCorrelation.js");
-const WebServer = require("./WebServer.js");
+const TSG = require("./includes/data/TimeSeriesGenerator.js");
+const WebServer = require("./includes/api/WebServer.js");
 
 let tsg = new TSG();
 
-tsg.generateSeries(10, 100, function(data){
-    let webdata = [];
-    for(let i = 0; i < data.length; i++)
+let generated = tsg.generateSeries(tsg.simpleSeries, 1000, 100);
+let correlated = tsg.generateCorrleatedSeries(generated, 3, function(correlated){
+    correlated.unshift(generated);
+    exportSeries(correlated);
+});
+
+function exportSeries(series){
+    let seriesWithNames = [];
+    for(let i = 0; i < series.length; i++)
     {
-        webdata.push({name:i, data:data[i]});
+        seriesWithNames.push({name:i, data:series[i]});
     }
 
+    let dates = [];
+    for(let i = 0; i < series[0].length; i++)
+        dates.push(i);
+
     let server = new WebServer(3000);
-    server.start({dates:data[0], datasets:webdata});
-});
+    server.start({dates:dates, datasets:seriesWithNames});
+}
