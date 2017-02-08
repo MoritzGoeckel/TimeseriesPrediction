@@ -11,32 +11,42 @@
             crossorigin="anonymous"></script>
         
         <script>
+            let maxDataPoints = 100;
             $(document).ready(function(){
                 $.getJSON( "/api", function( resp ) {
                     var ctx = document.getElementById("myChart").getContext("2d");
                     
                     let colors = ["red", "green", "yellow", "violet", "gold", "grey", "brown", "purple", "red", "green", "yellow", "violet", "gold", "grey", "brown", "purple"]
 
+                    let stepsize = 1;
+                    let len = resp.datasets[0].data.length;
+                    if(len > maxDataPoints)
+                    {
+                        stepsize = Math.floor(len / maxDataPoints);
+                    }
+
                     var datasets = [];
                     for(let i in resp.datasets)
                     {
                         let onlyValues = [];
-                        for(let a in resp.datasets[i].data)
-                        {
+                        for(let a = 0; a < resp.datasets[i].data.length; a += stepsize)
                             onlyValues.push(resp.datasets[i].data[a].value);
-                        }
 
                         datasets.push({
                             label: resp.datasets[i].name,
                             fill: false,
                             borderColor: colors[i],
-                            borderWidth: "5px",
+                            borderWidth: "2px",
                             data: onlyValues
                         });
                     }
 
+                    let dates = [];
+                    for(let a = 0; a < resp.datasets[0].data.length; a += stepsize)
+                        dates.push(resp.datasets[0].data[a].timestamp);
+
                     let data = {
-                        labels: resp.dates,
+                        labels: dates,
                         datasets: datasets
                     };
 

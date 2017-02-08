@@ -30,7 +30,7 @@ module.exports = class{
         return output;
     }
 
-    generateCorrleatedSeries(originalSeries, count, callback){
+    generateCorrleatedSeries(originalSeries, count, baseNoise, noise, callback){
         let series = [];
         let functions = [];
 
@@ -41,11 +41,12 @@ module.exports = class{
         for(let i = 0; i < series.length; i++)
         {
             let randomIndex = Math.floor(Math.random() * i);
-            let randomCoefficient = (Math.random() * 10) - 5;
-            let randomOffset = (Math.random() * 300) - 150;
-            let randomNoise = Math.random() * 20 + 100;
+            let randomCoefficient = (Math.random() * 5) - 2.5;
+            let randomOffset = (Math.random() * 10) - 5;
+            let randomNoise = Math.random() * noise + baseNoise;
 
-            let direction = Math.random() * 10 - 5;
+            let direction = Math.random() * 0.1 - 0.05;
+            direction = 0;
 
             functions.push(function(series, newestIndex){
                 if(series[randomIndex].length >= newestIndex)
