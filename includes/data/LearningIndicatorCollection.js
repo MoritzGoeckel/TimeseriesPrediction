@@ -55,7 +55,7 @@ module.exports = class{
         this.conditionTimeframe = conditionTimeframe;
         this.conditionFunction = conditionFunction;
         this.networkOptions = {
-                rate: .1,
+                rate: .05,
                 iterations: 3,
                 //error: .005,
                 shuffle: true,
