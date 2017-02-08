@@ -1,3 +1,4 @@
+const LearningIndicatorCollection = require("./includes/data/LearningIndicatorCollection.js");
 const TimeSeriesGenerator = require("./includes/data/TimeSeriesGenerator.js");
 const LearningIndicator = require("./includes/data/LearningIndicator.js");
 const Indicators = require('technicalindicators');
@@ -5,8 +6,12 @@ const ValueMinusIndicator = require("./includes/data/indicator_wrapper/ValueMinu
 const ChooseAttributeIndicator = require("./includes/data/indicator_wrapper/ChooseAttributeIndicator.js");
 
 const WebServer = require("./includes/api/WebServer.js");
-
 let server = new WebServer(3000);
+
+let gen = new TimeSeriesGenerator();
+let series = gen.generateSeries(gen.normalSeries, 100 * 10, 100);
+
+let collection = new LearningIndicatorCollection();
 
 let condition = function(now, future)
 {
@@ -20,42 +25,30 @@ let condition = function(now, future)
         return 0;
 }
 
-let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 100 * 10, 100);
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
+    fastPeriod        : 3 + i,
+    slowPeriod        : 6 + 2 * i,
+    signalPeriod      : 1 + Math.floor(i / 2),
+    SimpleMAOscillator: false,
+    SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
 
-var sma = new ValueMinusIndicator(new Indicators.SMA({period : 5, values : []}));
-var macd = new ChooseAttributeIndicator(new Indicators.MACD({values : [],
-  fastPeriod        : 5,
-  slowPeriod        : 8,
-  signalPeriod      : 3 ,
-  SimpleMAOscillator: false,
-  SimpleMASignal    : false}), "histogram");
-
-let lis = [];
-lis.push(new LearningIndicator(macd, 100, 10, 5, condition));
-lis.push(new LearningIndicator(sma, 100, 10, 5, condition));
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, 5, condition));
 
 let price = {name:"price", data:[]};
+let outcome = {name:"price_outcome", data:[]};
+
 let predictionAvg = {name:"prediction", data:[]};
-let liValues = [{name:"macd", data:[]}, {name:"sma", data:[]}];
-let liPredictions = [{name:"macd_pred", data:[]}, {name:"sma_pred", data:[]}];
 
 for(let i = 0; i < series.length; i++)
 {
-    let timestamp;
-    let predictionSum = 0;
-    for(let a in lis){
-        lis[a].pushTick(series[i]);
-        lis[a].resolve();
-        liValues[a].data.push(lis[a].getIndicatorValue());
-        liPredictions[a].data.push(lis[a].getPrediction());
+    collection.pushTick(series[i]);
+    predictionAvg.data.push(collection.getPrediction());
+    price.data.push(series[i]);
 
-        let pred = lis[a].getPrediction();
-        timestamp = pred.timestamp;
-        predictionSum += pred.value;
-    }
-
-    predictionAvg.data.push({timestamp:timestamp, value:predictionSum / lis.length});
+    if(i + 5 < series.length)
+        outcome.data.push(series[i + 5]);
 
     //var myPerceptron = new Architect.Perceptron(2, 10, 10, 10, 10, 1);
     //myNetwork.activate([1,0,1,0]);
@@ -86,14 +79,7 @@ for(let i = 0; i < series.length; i++)
     ]
 
     trainer.train(trainingSet);*/
-
-    price.data.push(series[i]);
 }
 
-liValues.unshift(price);
-liPredictions.push(predictionAvg);
-
-let output = liValues.concat(liPredictions);
-
 //console.log(liValues);
-server.start(output);
+server.start([price, outcome, predictionAvg]);
