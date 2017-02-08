@@ -11,7 +11,8 @@
             crossorigin="anonymous"></script>
         
         <script>
-            let maxDataPoints = 100;
+            let maxDataPoints = 1000;
+
             $(document).ready(function(){
                 $.getJSON( "/api", function( resp ) {
                     var ctx = document.getElementById("myChart").getContext("2d");
