@@ -9,7 +9,7 @@ const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
 
 let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 100 * 10, 100);
+let series = gen.generateSeries(gen.normalSeries, 100 * 10, 200);
 
 let collection = new LearningIndicatorCollection();
 
@@ -30,6 +30,19 @@ for(let i = 1; i < 20; i++)
     fastPeriod        : 3 + i,
     slowPeriod        : 6 + 2 * i,
     signalPeriod      : 1 + Math.floor(i / 2),
+    SimpleMAOscillator: false,
+    SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
+
+function rand(min, max)
+{
+    return Math.round(min + Math.random() * (min - max));
+}
+
+for(let i = 1; i < 30; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
+    fastPeriod        : rand(2, 20),
+    slowPeriod        : rand(2, 20),
+    signalPeriod      : rand(2, 20),
     SimpleMAOscillator: false,
     SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
 
