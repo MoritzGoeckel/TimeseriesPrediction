@@ -49,11 +49,12 @@ for(let i = 1; i < 30; i++)
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, 5, condition));
 
+//The data for the graph
 let price = {name:"price", data:[]};
 let outcome = {name:"price_outcome", data:[]};
-
 let predictionAvg = {name:"prediction", data:[]};
 
+//Iterate the series
 for(let i = 0; i < series.length; i++)
 {
     collection.pushTick(series[i]);
@@ -62,37 +63,8 @@ for(let i = 0; i < series.length; i++)
 
     if(i + 5 < series.length)
         outcome.data.push(series[i + 5]);
-
-    //var myPerceptron = new Architect.Perceptron(2, 10, 10, 10, 10, 1);
-    //myNetwork.activate([1,0,1,0]);
-    //myNetwork.activate([1,1]);
-    //myNetwork.propagate(learningRate, [0]);
-
-    //var exported = myNetwork.toJSON();
-    //var imported = Network.fromJSON(exported);
-
-    /*var trainer = new Trainer(myNetwork)
-    var trainingSet = [
-    {
-        input: [0,0],
-        output: [0]
-    },
-    {
-        input: [0,1],
-        output: [1]
-    },
-    {
-        input: [1,0],
-        output: [1]
-    },
-    {
-        input: [1,1],
-        output: [0]
-    },
-    ]
-
-    trainer.train(trainingSet);*/
 }
 
-//console.log(liValues);
+//Todo: Get success statistics
+
 server.start([price, outcome, predictionAvg]);

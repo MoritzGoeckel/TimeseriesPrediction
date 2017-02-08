@@ -45,4 +45,36 @@ module.exports = class{
     getPredictions(){
         return this.currentPredictions;
     }
+
+    resolveNN(){
+        //var myPerceptron = new Architect.Perceptron(2, 10, 10, 10, 10, 1);
+        //myNetwork.activate([1,0,1,0]);
+        //myNetwork.activate([1,1]);
+        //myNetwork.propagate(learningRate, [0]);
+
+        //var exported = myNetwork.toJSON();
+        //var imported = Network.fromJSON(exported);
+
+        /*var trainer = new Trainer(myNetwork)
+        var trainingSet = [
+        {
+            input: [0,0],
+            output: [0]
+        },
+        {
+            input: [0,1],
+            output: [1]
+        },
+        {
+            input: [1,0],
+            output: [1]
+        },
+        {
+            input: [1,1],
+            output: [0]
+        },
+        ]
+
+        trainer.train(trainingSet);*/
+    }
 }
