@@ -89,6 +89,11 @@ module.exports = class{
             return undefined;
     }
 
+    getIndicatorValue()
+    {
+        return (this.lastIndicatorValue - this.minSeenValue) / (this.maxSeenValue - this.minSeenValue);
+    }
+
     getLookupTable()
     {
         return this.lookupTable;

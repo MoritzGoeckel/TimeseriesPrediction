@@ -30,7 +30,7 @@ module.exports = class{
         return output;
     }
 
-    generateCorrleatedSeries(count, length, callback){
+    generateCorrleatedSeries(originalSeries, count, callback){
         let series = [];
         let functions = [];
 
@@ -59,7 +59,7 @@ module.exports = class{
             for(let i = 0; i < series.length; i++)
             {
                 if(i == 0)
-                    series[0].push(time);
+                    series[0].push(originalSeries[time]);
                 else{
                     series[i].push(functions[i](series, time));
                 }
