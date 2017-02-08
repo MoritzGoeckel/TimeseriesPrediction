@@ -16,5 +16,5 @@ function exportSeries(series){
     }
 
     let server = new WebServer(3000);
-    server.start({datasets:seriesWithNames});
+    server.start(seriesWithNames);
 }
