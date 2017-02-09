@@ -35,7 +35,7 @@ module.exports = class{
             predictionSum += pred.value;
         }
 
-        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues})
+        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice(0, this.currentValues.length)})
         this.currentAvgPrediction = predictionSum / this.lis.length;
     }
 
@@ -54,6 +54,8 @@ module.exports = class{
     initNeuralNetwork(conditionTimeframe, conditionFunction){
         this.conditionTimeframe = conditionTimeframe;
         this.conditionFunction = conditionFunction;
+
+        //Expose the options somehow todo
         this.networkOptions = {
                 rate: .0001,
                 iterations: 1,
@@ -117,6 +119,9 @@ module.exports = class{
                     result = [0, 1];
                 if(result === 0)
                     result = [0, 0];
+                
+                if(this.trainingSet.length > 0 && this.trainingSet[this.trainingSet.length - 1].timestamp >= timestamp)
+                    throw new Error("Should not contain a newer timestamp");
 
                 this.trainingSet.push({input:usedIndicatorValues, output:result, timestamp:timestamp});
             }
@@ -131,11 +136,10 @@ module.exports = class{
 
         if(this.trainingSet.length != 0)
         {
-            console.log("Train frame: " + (lastItem.timestamp - this.trainingSet[0].timestamp)); //Something is wierd here      
-            console.log("Update NN with " + this.trainingSet.length);
+            console.log("Update NN with " + this.trainingSet.length + " samples");
 
             var trainer = new Synaptic.Trainer(this.network);
-            trainer.train(this.trainingSet, this.networkOptions);
+            trainer.train(this.trainingSet.slice(0, this.trainingSet.length), this.networkOptions);
         }
     }
 }
