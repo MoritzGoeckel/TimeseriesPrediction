@@ -9,7 +9,7 @@ const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
 
 let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 100 * 100, 500);
+let series = gen.generateSeries(gen.normalSeries, 100 * 100 * 4, 200);
 
 let collection = new LearningIndicatorCollection();
 
@@ -58,19 +58,29 @@ let outcome = {name:"price_outcome", data:[]};
 let predictionAvg = {name:"prediction", data:[]};
 let predictionNN = {name:"prediction_nn", data:[]};
 
+let lastProgress;
+
 //Iterate the series
 for(let i = 0; i < series.length; i++)
 {
     collection.pushTick(series[i]);
 
-    collection.updateNeuralNetwork();
+    if(i % 100 == 0)
+        collection.updateNeuralNetwork();
+    
     predictionNN.data.push(collection.getNeuralNetworkPrediction());
 
     predictionAvg.data.push(collection.getPrediction());
     price.data.push(series[i]);
 
     if(i + 5 < series.length)
-        outcome.data.push(series[i + 5]);
+        outcome.data.push({timestamp:series[i].timestamp, value:series[i + 5].value - series[i].value});
+
+    let progress = Math.round(i / series.length * 100);
+    if(lastProgress != progress){
+        console.log(Math.round(i / series.length * 100) + "%");
+        lastProgress = progress;
+    }
 }
 
 //Todo: Get success statistics

@@ -55,24 +55,25 @@ module.exports = class{
         this.conditionTimeframe = conditionTimeframe;
         this.conditionFunction = conditionFunction;
         this.networkOptions = {
-                rate: .05,
-                iterations: 3,
+                rate: .0001,
+                iterations: 1,
                 //error: .005,
                 shuffle: true,
                 //log: 1000,
                 cost: Synaptic.Trainer.cost.CROSS_ENTROPY,
-                batchSize: 100
+                batchTimeframe: 50
             };
         
         this.trainingSet = [];        
 
         //var exported = myNetwork.toJSON();
         //var imported = Network.fromJSON(exported);
-        this.network = new Synaptic.Architect.Perceptron(this.lis.length, this.lis.length, 1);
+        this.network = new Synaptic.Architect.Perceptron(this.lis.length, this.lis.length, 2);
     }
 
     getNeuralNetworkPrediction(){
-        return {timestamp:this.lastTimestamp, value:this.network.activate(this.currentValues)[0]};
+        let result = this.network.activate(this.currentValues);
+        return {timestamp:this.lastTimestamp, value:result[0] - result[1], raw:result};
     }
 
     updateNeuralNetwork(){
@@ -97,6 +98,7 @@ module.exports = class{
                 if(result != 0 && result != 1 && result != -1)
                     throw new Error("Result should be 0 or 1 or -1");
 
+                let timestamp = this.history[0].timestamp;
                 let usedIndicatorValues = this.history[0].indicators.splice(0, this.history[0].indicators.length);
                 this.history.shift();
 
@@ -109,18 +111,29 @@ module.exports = class{
                         usedIndicatorValues[i] = 0.5; //Standart values
                 }
 
-                this.trainingSet.push({input:usedIndicatorValues, output:[result]});
+                if(result === 1)
+                    result = [1, 0];
+                if(result === -1)
+                    result = [0, 1];
+                if(result === 0)
+                    result = [0, 0];
+
+                this.trainingSet.push({input:usedIndicatorValues, output:result, timestamp:timestamp});
             }
             else
                 break;
         }
 
-
-        while(this.trainingSet.length > this.networkOptions.batchSize)
+        let lastItem = this.trainingSet[this.trainingSet.length - 1];
+        while(this.trainingSet.length > 0 && this.trainingSet[0].timestamp + this.networkOptions.batchTimeframe < lastItem.timestamp){
             this.trainingSet.shift();
+        }
 
         if(this.trainingSet.length != 0)
         {
+            console.log("Train frame: " + (lastItem.timestamp - this.trainingSet[0].timestamp)); //Something is wierd here      
+            console.log("Update NN with " + this.trainingSet.length);
+
             var trainer = new Synaptic.Trainer(this.network);
             trainer.train(this.trainingSet, this.networkOptions);
         }
