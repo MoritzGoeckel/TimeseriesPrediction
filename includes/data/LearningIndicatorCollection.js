@@ -51,19 +51,18 @@ module.exports = class{
         return this.currentPredictions;
     }
 
-    initNeuralNetwork(conditionTimeframe, conditionFunction){
+    initNeuralNetwork(conditionTimeframe, conditionFunction, learningRate, reinforceTimeframe){
         this.conditionTimeframe = conditionTimeframe;
         this.conditionFunction = conditionFunction;
 
-        //Expose the options somehow todo
         this.networkOptions = {
-                rate: .0001,
+                rate: learningRate,
                 iterations: 1,
                 //error: .005,
                 shuffle: true,
                 //log: 1000,
-                cost: Synaptic.Trainer.cost.CROSS_ENTROPY,
-                batchTimeframe: 50
+                cost: Synaptic.Trainer.cost.CROSS_ENTROPY, //Opt: Another cost function?
+                batchTimeframe: reinforceTimeframe
             };
         
         this.trainingSet = [];        

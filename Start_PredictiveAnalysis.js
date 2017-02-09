@@ -50,7 +50,7 @@ function rand(min, max)
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, 5, condition));
 
-collection.initNeuralNetwork(5, condition);
+collection.initNeuralNetwork(5, condition, .0001, 50);
 
 //The data for the graph
 let price = {name:"price", data:[]};
