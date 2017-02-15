@@ -100,7 +100,8 @@ module.exports = class{
                     throw new Error("Result should be 0 or 1 or -1");
 
                 let timestamp = this.history[0].timestamp;
-                let usedIndicatorValues = this.history[0].indicators.splice(0, this.history[0].indicators.length);
+                //Todo: Splice is not copy!!!!
+                let usedIndicatorValues = this.history[0].indicators.slice();
                 this.history.shift();
 
                 //Train
@@ -135,8 +136,7 @@ module.exports = class{
 
         if(this.trainingSet.length != 0)
         {
-            console.log("Update NN with " + this.trainingSet.length + " samples");
-
+            //console.log("Update NN with " + this.trainingSet.length + " samples");
             var trainer = new Synaptic.Trainer(this.network);
             trainer.train(this.trainingSet.slice(0, this.trainingSet.length), this.networkOptions);
         }

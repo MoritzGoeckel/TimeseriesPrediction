@@ -85,4 +85,43 @@ for(let i = 0; i < series.length; i++)
 
 //Todo: Get success statistics
 
+let predictionAvg_success = 0;
+let predictionAvg_count = 0;
+let predictionNN_success = 0;
+let predictionNN_count = 0;
+
+let threshold = 0.3;
+
+for(let i = 0; i < price.data.length; i++){
+    if(outcome.data[i] != undefined && isNaN(outcome.data[i].value) == false){
+
+        if(isNaN(predictionAvg.data[i].value) == false && predictionAvg.data[i] != undefined)
+        {
+            if(predictionAvg.data[i].value > threshold && outcome.data[i].value > price.data[i].value)
+                predictionAvg_success++;
+
+            if(predictionAvg.data[i].value < -threshold && outcome.data[i].value < price.data[i].value)
+                predictionAvg_success++;
+
+            if(predictionAvg.data[i].value > threshold || predictionAvg.data[i].value < -threshold)
+                predictionAvg_count++;
+        }
+
+        if(isNaN(predictionNN.data[i].value) == false && predictionNN.data[i] != undefined)
+        {
+            if(predictionNN.data[i].value > threshold && outcome.data[i].value > price.data[i].value)
+                predictionNN_success++;
+
+            if(predictionNN.data[i].value < -threshold && outcome.data[i].value < price.data[i].value)
+                predictionNN_success++;
+              
+            if(predictionNN.data[i].value > threshold || predictionNN.data[i].value < -threshold)
+                predictionNN_count++;
+        }
+    }
+}
+
+console.log("pred_avg: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%");
+console.log("pred_nn: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%");
+
 server.start([price, outcome, predictionAvg, predictionNN]);
