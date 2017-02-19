@@ -22,15 +22,15 @@ module.exports = class{
         this.normalSeriesBias = normalSeriesBias;
     }
 
-    generateSeries(fn, steps, max){
+    generateSeries(fn, steps, maxTime){
         let output = [];
-        for(let i = 0; i < max; i += max / steps)
+        for(let i = 0; i < maxTime; i += maxTime / steps)
             output.push({timestamp:i, value:fn(i)});
         
         return output;
     }
 
-    generateCorrleatedSeries(count, length, callback){
+    generateCorrleatedSeries(originalSeries, count, baseNoise, noise, callback){
         let series = [];
         let functions = [];
 
@@ -41,27 +41,28 @@ module.exports = class{
         for(let i = 0; i < series.length; i++)
         {
             let randomIndex = Math.floor(Math.random() * i);
-            let randomCoefficient = (Math.random() * 10) - 5;
-            let randomOffset = (Math.random() * 300) - 150;
-            let randomNoise = Math.random() * 20 + 100;
+            let randomCoefficient = (Math.random() * 5) - 2.5;
+            let randomOffset = (Math.random() * 10) - 5;
+            let randomNoise = Math.random() * noise + baseNoise;
 
-            let direction = Math.random() * 10 - 5;
+            let direction = Math.random() * 0.1 - 0.05;
+            direction = 0;
 
             functions.push(function(series, newestIndex){
                 if(series[randomIndex].length >= newestIndex)
-                    return series[randomIndex][newestIndex] * randomCoefficient + randomOffset + ((Math.random() * randomNoise) - (randomNoise / 2)) + direction * newestIndex;
+                    return series[randomIndex][newestIndex].value * randomCoefficient + randomOffset + ((Math.random() * randomNoise) - (randomNoise / 2)) + direction * newestIndex;
                 else
                     throw new Error("Dependency not yet calculated");
             });      
         }
 
-        for(let time = 0; time < length; time++)
+        for(let time = 0; time < originalSeries.length; time++)
             for(let i = 0; i < series.length; i++)
             {
                 if(i == 0)
-                    series[0].push(time);
+                    series[0].push({timestamp:time, value:originalSeries[time].value});
                 else{
-                    series[i].push(functions[i](series, time));
+                    series[i].push({timestmap:time, value:functions[i](series, time)});
                 }
             }
 

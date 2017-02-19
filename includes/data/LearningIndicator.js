@@ -18,7 +18,7 @@ module.exports = class{
         this.minSeenValue = 100000;
     }
 
-    push(entry){
+    pushTick(entry){
         if(entry.timestamp > this.lastRecievedTimestamp)
         {
             this.lastRecievedTimestamp = entry.timestamp;
@@ -61,7 +61,7 @@ module.exports = class{
                 let stepsize = (this.maxSeenValue - this.minSeenValue) / this.lookupResolution;
                 let usedIndicatorValue = Math.floor((indicatorValue - this.minSeenValue) / stepsize);
 
-                console.log(indicatorValue + " => " + usedIndicatorValue);
+                //console.log(indicatorValue + " => " + usedIndicatorValue);
 
                 if(this.lookupTable[usedIndicatorValue] == undefined)
                     this.lookupTable[usedIndicatorValue] = {value:0, lastEntry:this.history[0].timestamp};
@@ -84,9 +84,14 @@ module.exports = class{
         let usedIndicatorValue = Math.floor((this.lastIndicatorValue - this.minSeenValue) / stepsize);
 
         if(this.lookupTable[usedIndicatorValue] != undefined)
-            return this.lookupTable[usedIndicatorValue].value;
+            return {value:this.lookupTable[usedIndicatorValue].value, timestamp:this.lastRecievedTimestamp};
         else
-            return undefined;
+            return {value:undefined, timestamp:this.lastRecievedTimestamp};
+    }
+
+    getIndicatorValue()
+    {
+        return {value:(this.lastIndicatorValue - this.minSeenValue) / (this.maxSeenValue - this.minSeenValue), timestamp:this.lastRecievedTimestamp};
     }
 
     getLookupTable()

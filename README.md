@@ -9,9 +9,13 @@ express-rest
 redis
 node-schedule
 request
+npm install regression
 ```
 
 ##Usage
 ``` javascript
 node Start.js
 ```
+
+https://github.com/Tom-Alexander/regression-js
+https://github.com/cazala/synaptic/wiki/Trainer

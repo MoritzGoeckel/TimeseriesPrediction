@@ -3,7 +3,7 @@
     </head>
     <body>
 
-        <canvas id="myChart" width="60%" height="30%"></canvas>
+        <canvas id="myChart" width="100px" height="50px"></canvas>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
         <script
             src="https://code.jquery.com/jquery-3.1.1.min.js"
@@ -11,28 +11,49 @@
             crossorigin="anonymous"></script>
         
         <script>
+            let maxDataPoints = 100;
+
             $(document).ready(function(){
                 $.getJSON( "/api", function( resp ) {
                     var ctx = document.getElementById("myChart").getContext("2d");
                     
+                    console.log(resp);
+
                     let colors = ["red", "green", "yellow", "violet", "gold", "grey", "brown", "purple", "red", "green", "yellow", "violet", "gold", "grey", "brown", "purple"]
 
-                    var datasets = [];
-                    for(let i in resp.datasets)
+                    let stepsize = 1;
+                    let len = resp[0].data.length;
+                    if(len > maxDataPoints)
                     {
+                        stepsize = Math.floor(len / maxDataPoints);
+                    }
+
+                    var datasets = [];
+                    for(let i in resp)
+                    {
+                        let onlyValues = [];
+                        for(let a = 0; a < resp[i].data.length; a += stepsize)
+                            onlyValues.push(resp[i].data[a].value);
+
                         datasets.push({
-                            label: resp.datasets[i].name,
+                            label: resp[i].name,
                             fill: false,
                             borderColor: colors[i],
-                            borderWidth: "5px",
-                            data: resp.datasets[i].data
+                            borderWidth: "2px",
+                            data: onlyValues
                         });
                     }
 
-                    var data = {
-                        labels: resp.dates,
+                    let dates = [];
+                    for(let a = 0; a < resp[0].data.length; a += stepsize)
+                        dates.push(resp[0].data[a].timestamp);
+
+                    let data = {
+                        labels: dates,
                         datasets: datasets
                     };
+
+                    console.log(data);
 
                     var myRadarChart = new Chart(ctx, {
                         type: 'line',

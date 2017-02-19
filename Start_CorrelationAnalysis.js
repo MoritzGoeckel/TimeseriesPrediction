@@ -1,87 +1,29 @@
-const TimeSeriesGenerator = require("./TimeSeriesGenerator.js");
-const LearningIndicator = require("./LearningIndicator.js");
-const Indicators = require('technicalindicators');
-const ValueMinusIndicator = require("./indicator_wrapper/ValueMinusIndicator.js");
-const ChooseAttributeIndicator = require("./indicator_wrapper/ChooseAttributeIndicator.js");
+const TSG = require("./includes/data/TimeSeriesGenerator.js");
+const WebServer = require("./includes/api/WebServer.js");
+const Regression = require('regression');
 
-const WebServer = require("./WebServer.js");
+let tsg = new TSG();
 
-let server = new WebServer(3000);
+let generated = tsg.generateSeries(tsg.simpleSeries, 1000, 20);
+let correlated = tsg.generateCorrleatedSeries(generated, 6, 0.5, 3, function(correlated){
 
-let condition = function(now, future)
-{
-    let delta = future[future.length - 1].value - now.value;
+    //Some analysis Regression
+    var data = [[0,1],[32, 67] .... [12, 79]];
+    var result = regression('linear', data); //linear exponential logarithmic
+    //Const function
+    //console.log(result);
+    //Distance extraordinary -> Bet to closing distance
 
-    if(delta >= 0.1)
-        return 1;
-    else if(delta <= -0.1)
-        return -1;
-    else
-        return 0;
-}
+    exportSeries(correlated);
+});
 
-let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 200 * 10, 200);
-
-var sma = new ValueMinusIndicator(new Indicators.SMA({period : 5, values : []}));
-var macd = new ChooseAttributeIndicator(new Indicators.MACD({values : [],
-  fastPeriod        : 5,
-  slowPeriod        : 8,
-  signalPeriod      : 3 ,
-  SimpleMAOscillator: false,
-  SimpleMASignal    : false}), "histogram");
-
-let li = new LearningIndicator(macd, 100, 10, 5, condition);
-
-let data = {datasets:[], dates:[]};
-
-let values = [];
-let predictions = [];
-let outcomes = [];
-
-let counter = 1;
-let successes = 0;
-let hitrate = [];
-
-for(let i = 0; i < series.length; i++)
-{
-    li.push(series[i]);
-    li.resolve();
-
-    data.dates.push(i);
-
-    values.push(series[i].value);
-
-    let prediction = li.getPrediction();
-    predictions.push(prediction);
-
-    if(i + 5 < series.length)
+function exportSeries(series){
+    let seriesWithNames = [];
+    for(let i = 0; i < series.length; i++)
     {
-        let diff = series[i + 5].value - series[i].value;
-        outcomes.push(diff);
-
-        let predictionThreshold = 0.4;
-
-        if(prediction >= predictionThreshold || prediction <= -predictionThreshold){
-            if(diff >= 0.1 && prediction >= predictionThreshold)
-                successes++;
-            if(diff <= -0.1 && prediction <= -predictionThreshold)
-                successes++;
-            
-            counter++;
-        }
-
-        hitrate.push(successes / counter);
+        seriesWithNames.push({name:i, data:series[i]});
     }
+
+    let server = new WebServer(3000);
+    server.start(seriesWithNames);
 }
-
-data.datasets.push({name:"values", data:values});
-data.datasets.push({name:"predictions", data:predictions});
-data.datasets.push({name:"outocmes", data:outcomes});
-data.datasets.push({name:"hitrate", data:hitrate});
-
-console.log((successes / counter) + " after " + counter);
-//console.log(li.getLookupTable());
-
-
-server.start(data);
