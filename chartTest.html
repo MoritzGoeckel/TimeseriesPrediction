@@ -1,0 +1,32 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.0.0/dygraph.js"></script>
+
+<div id="graph"></div>
+
+<script>
+new Dygraph(document.getElementById("graph"),
+              [
+				//X, Y1, Y2, Y3
+                [1,10,100],
+                [2,20,80],
+                [3,50,60],
+                [4,70,80]
+              ],
+			  {
+				  legend: 'always',
+				  //title: 'NYC vs. SF',
+				  //showRoller: true,
+				  rollPeriod: 14,
+				  //customBars: true,
+				  labels: [ "x", "A", "B" ],
+				  //ylabel: 'Temperature (F)',
+              });
+			  
+/*new Dygraph(div, "ny-vs-sf.txt", {
+  legend: 'always',
+  title: 'NYC vs. SF',
+  showRoller: true,
+  rollPeriod: 14,
+  customBars: true,
+  ylabel: 'Temperature (F)',
+});*/
+</script>
