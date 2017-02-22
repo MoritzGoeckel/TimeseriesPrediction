@@ -1,66 +1,53 @@
-<html>
-    <head>
-    </head>
-    <body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dygraph/2.0.0/dygraph.js"></script>
 
-        <canvas id="myChart" width="100px" height="50px"></canvas>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.min.js"></script>
-        <script
-            src="https://code.jquery.com/jquery-3.1.1.min.js"
-            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-            crossorigin="anonymous"></script>
-        
-        <script>
-            let maxDataPoints = 100;
+<script
+    src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
 
-            $(document).ready(function(){
-                $.getJSON( "/api", function( resp ) {
-                    var ctx = document.getElementById("myChart").getContext("2d");
-                    
-                    console.log(resp);
+<div id="graph" style="width: 100%; height: 100%;"></div>
 
-                    let colors = ["red", "green", "yellow", "violet", "gold", "grey", "brown", "purple", "red", "green", "yellow", "violet", "gold", "grey", "brown", "purple"]
+<script>
 
-                    let stepsize = 1;
-                    let len = resp[0].data.length;
-                    if(len > maxDataPoints)
-                    {
-                        stepsize = Math.floor(len / maxDataPoints);
-                    }
+$(document).ready(function(){
+        $.getJSON( "/api", function( resp ) {
+            /*let data = [
+                //X, Y1, Y2, Y3
+                        [1,10,100],
+                        [2,20,80],
+                        [3,50,60],
+                        [4,70,80]
+                        ];*/
 
-                    var datasets = [];
-                    for(let i in resp)
-                    {
-                        let onlyValues = [];
-                        for(let a = 0; a < resp[i].data.length; a += stepsize)
-                            onlyValues.push(resp[i].data[a].value);
+                console.log(resp);
+                
+                let data = resp.data;
 
-                        datasets.push({
-                            label: resp[i].name,
-                            fill: false,
-                            borderColor: colors[i],
-                            borderWidth: "2px",
-                            data: onlyValues
-                        });
-                    }
+                /*setInterval(function(){
+                data.push([data[data.length - 1][0] + 1, Math.random() * 100, Math.random() * 100]);
+                g.updateOptions( { 'file': data } );
+                }, 300);*/
 
-                    let dates = [];
-                    for(let a = 0; a < resp[0].data.length; a += stepsize)
-                        dates.push(resp[0].data[a].timestamp);
-
-                    let data = {
-                        labels: dates,
-                        datasets: datasets
-                    };
-
-                    console.log(data);
-
-                    var myRadarChart = new Chart(ctx, {
-                        type: 'line',
-                        data: data
-                    });
-                }); 
-            });
-        </script>
-    </body>
-</html>
+                let g = new Dygraph(document.getElementById("graph"),
+                            data,
+                            {
+                                legend: 'always',
+                                //title: 'NYC vs. SF',
+                                //showRoller: true,
+                                rollPeriod: 14,
+                                //customBars: true,
+                                labels: resp.labels,
+                                //ylabel: 'Temperature (F)',
+                            });
+                            
+                /*new Dygraph(div, "ny-vs-sf.txt", {
+                legend: 'always',
+                title: 'NYC vs. SF',
+                showRoller: true,
+                rollPeriod: 14,
+                customBars: true,
+                ylabel: 'Temperature (F)',
+                });*/
+        });
+});
+</script>

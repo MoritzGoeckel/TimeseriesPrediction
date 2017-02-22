@@ -9,7 +9,7 @@ const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
 
 let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 100 * 100 * 4, 200);
+let series = gen.generateSeries(gen.normalSeries, 100 * 100, 200);
 
 let collection = new LearningIndicatorCollection();
 
@@ -53,34 +53,41 @@ for(let i = 1; i < 20; i++)
 collection.initNeuralNetwork(5, condition, .0001, 50);
 
 //The data for the graph
-let price = {name:"price", data:[]};
-let outcome = {name:"price_outcome", data:[]};
-let predictionAvg = {name:"prediction", data:[]};
-let predictionNN = {name:"prediction_nn", data:[]};
+let ticks = []; //First one is date
+
+const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4;
+
+let labels = ["date", "price", "price_outcome", "prediction", "prediction_nn"];
 
 let lastProgress;
 
 //Iterate the series
 for(let i = 0; i < series.length; i++)
 {
+    let thisTick = [];
+    thisTick.push(series[i].timestamp);
+    thisTick.push(series[i].value);
+    
     collection.pushTick(series[i]);
 
     if(i % 100 == 0)
         collection.updateNeuralNetwork();
-    
-    predictionNN.data.push(collection.getNeuralNetworkPrediction());
-
-    predictionAvg.data.push(collection.getPrediction());
-    price.data.push(series[i]);
 
     if(i + 5 < series.length)
-        outcome.data.push({timestamp:series[i].timestamp, value:series[i + 5].value - series[i].value});
+        thisTick.push(series[i + 5].value - series[i].value);
+    else
+        thisTick.push(NaN);
+    
+    thisTick.push(collection.getPrediction().value);
+    thisTick.push(collection.getNeuralNetworkPrediction().value);
 
     let progress = Math.round(i / series.length * 100);
     if(lastProgress != progress){
         console.log(Math.round(i / series.length * 100) + "%");
         lastProgress = progress;
     }
+
+    ticks.push(thisTick);
 }
 
 //Todo: Get success statistics
@@ -90,32 +97,34 @@ let predictionAvg_count = 0;
 let predictionNN_success = 0;
 let predictionNN_count = 0;
 
-let threshold = 0.3;
+let threshold = 0.05;
 
-for(let i = 0; i < price.data.length; i++){
-    if(outcome.data[i] != undefined && isNaN(outcome.data[i].value) == false){
+for(let i = 0; i < ticks.length; i++){
+    if(ticks[i][OUTCOME] != undefined && isNaN(ticks[i][OUTCOME]) == false){
 
-        if(isNaN(predictionAvg.data[i].value) == false && predictionAvg.data[i] != undefined)
+        //Prediction AVG
+        if(isNaN(ticks[i][PRED]) == false && ticks[i][PRED] != undefined)
         {
-            if(predictionAvg.data[i].value > threshold && outcome.data[i].value > price.data[i].value)
+            if(ticks[i][PRED] > threshold && ticks[i][OUTCOME] > 0)
                 predictionAvg_success++;
 
-            if(predictionAvg.data[i].value < -threshold && outcome.data[i].value < price.data[i].value)
+            if(ticks[i][PRED] < -threshold && ticks[i][OUTCOME] < 0)
                 predictionAvg_success++;
 
-            if(predictionAvg.data[i].value > threshold || predictionAvg.data[i].value < -threshold)
+            if(ticks[i][PRED] > threshold || ticks[i][PRED] < -threshold)
                 predictionAvg_count++;
         }
 
-        if(isNaN(predictionNN.data[i].value) == false && predictionNN.data[i] != undefined)
+        //PredictionNN
+        if(isNaN(ticks[i][PREDNN]) == false && ticks[i][PREDNN] != undefined)
         {
-            if(predictionNN.data[i].value > threshold && outcome.data[i].value > price.data[i].value)
+            if(ticks[i][PREDNN] > threshold && ticks[i][OUTCOME] > 0)
                 predictionNN_success++;
 
-            if(predictionNN.data[i].value < -threshold && outcome.data[i].value < price.data[i].value)
+            if(ticks[i][PREDNN] < -threshold && ticks[i][OUTCOME] < 0)
                 predictionNN_success++;
               
-            if(predictionNN.data[i].value > threshold || predictionNN.data[i].value < -threshold)
+            if(ticks[i][PREDNN] > threshold || ticks[i][PREDNN] < -threshold)
                 predictionNN_count++;
         }
     }
@@ -124,4 +133,4 @@ for(let i = 0; i < price.data.length; i++){
 console.log("pred_avg: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%");
 console.log("pred_nn: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%");
 
-server.start([price, outcome, predictionAvg, predictionNN]);
+server.start({labels: labels, data:ticks});
