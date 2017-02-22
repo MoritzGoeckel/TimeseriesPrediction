@@ -11,52 +11,37 @@
 <script>
 
 $(document).ready(function(){
-        $.getJSON( "/api", function( resp ) {
-            /*let data = [
-                //X, Y1, Y2, Y3
-                        [1,10,100],
-                        [2,20,80],
-                        [3,50,60],
-                        [4,70,80]
-                        ];*/
+    $.getJSON( "/api", function( resp ) {
+        console.log(resp);
+        
+        if(resp.info != undefined)
+        {
+            $("#info").html(resp.info);
+            $("#info").show();
+        }
+        else
+            $("#info").hide();
 
-                console.log(resp);
-                
-                if(resp.info != undefined)
-                {
-                    $("#info").html(resp.info);
-                    $("#info").show();
-                }
-                else
-                    $("#info").hide();
+        //Realtime would look like this
+        /*setInterval(function(){
+            data.push([data[data.length - 1][0] + 1, Math.random() * 100, Math.random() * 100]);
+            g.updateOptions( { 'file': data } );
+        }, 300);*/
 
-                let data = resp.data;
-
-                /*setInterval(function(){
-                data.push([data[data.length - 1][0] + 1, Math.random() * 100, Math.random() * 100]);
-                g.updateOptions( { 'file': data } );
-                }, 300);*/
-
-                let g = new Dygraph(document.getElementById("graph"),
-                            data,
-                            {
-                                legend: 'always',
-                                //title: 'NYC vs. SF',
-                                //showRoller: true,
-                                rollPeriod: 14,
-                                //customBars: true,
-                                labels: resp.labels,
-                                //ylabel: 'Temperature (F)',
-                            });
-                            
-                /*new Dygraph(div, "ny-vs-sf.txt", {
+        let g = new Dygraph(
+            document.getElementById("graph"),
+            resp.data,
+            {
                 legend: 'always',
-                title: 'NYC vs. SF',
-                showRoller: true,
-                rollPeriod: 14,
-                customBars: true,
-                ylabel: 'Temperature (F)',
-                });*/
-        });
+                //title: 'NYC vs. SF',
+                //showRoller: true,
+                //rollPeriod: 14,
+                //customBars: true,
+                labels: resp.labels,
+                //ylabel: 'Value',
+                xlabel: 'Time'
+            }
+        );
+    });
 });
 </script>

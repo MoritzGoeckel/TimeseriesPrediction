@@ -9,7 +9,7 @@ const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
 
 let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.normalSeries, 100 * 100, 200);
+let series = gen.generateSeries(gen.complexSeries, 100 * 100, 200);
 
 let collection = new LearningIndicatorCollection();
 
