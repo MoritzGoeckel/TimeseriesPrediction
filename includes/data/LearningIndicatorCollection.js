@@ -35,7 +35,7 @@ module.exports = class{
             predictionSum += pred.value;
         }
 
-        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice(0, this.currentValues.length)})
+        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice()});
         this.currentAvgPrediction = predictionSum / this.lis.length;
     }
 
@@ -69,16 +69,24 @@ module.exports = class{
 
         //var exported = myNetwork.toJSON();
         //var imported = Network.fromJSON(exported);
-        this.network = new Synaptic.Architect.Perceptron(this.lis.length, this.lis.length, 2);
+        this.network = new Synaptic.Architect.Perceptron(this.lis.length, Math.round(this.lis.length / 2), Math.round(this.lis.length / 4), 2);
     }
 
     getNeuralNetworkPrediction(){
-        let result = this.network.activate(this.currentValues);
+        let noNaNValues = this.currentValues.slice();
+        for(let i in noNaNValues)
+        {
+            if(isNaN(noNaNValues[i]))
+                noNaNValues[i] = 0.5;
+            if(isFinite(noNaNValues[i]) == false)
+                noNaNValues[i] = 0.5;
+        }
+
+        let result = this.network.activate(noNaNValues);
         return {timestamp:this.lastTimestamp, value:result[0] - result[1], raw:result};
     }
 
     updateNeuralNetwork(){
-
         while(this.history.length > 0)
         {
             let foundIndex = undefined;
@@ -100,17 +108,17 @@ module.exports = class{
                     throw new Error("Result should be 0 or 1 or -1");
 
                 let timestamp = this.history[0].timestamp;
-                //Todo: Splice is not copy!!!!
-                let usedIndicatorValues = this.history[0].indicators.slice();
+                let noNaNValues = this.history[0].indicators.slice();
                 this.history.shift();
 
                 //Train
-                for(let i in usedIndicatorValues)
+                //No NaN or Infinite
+                for(let i in noNaNValues)
                 {
-                    if(isNaN(usedIndicatorValues[i]))
-                        usedIndicatorValues[i] = 0.5;
-                    if(isFinite(usedIndicatorValues[i]) == false)
-                        usedIndicatorValues[i] = 0.5; //Standart values
+                    if(isNaN(noNaNValues[i]))
+                        noNaNValues[i] = 0.5;
+                    if(isFinite(noNaNValues[i]) == false)
+                        noNaNValues[i] = 0.5; //Standart values
                 }
 
                 if(result === 1)
@@ -123,7 +131,7 @@ module.exports = class{
                 if(this.trainingSet.length > 0 && this.trainingSet[this.trainingSet.length - 1].timestamp >= timestamp)
                     throw new Error("Should not contain a newer timestamp");
 
-                this.trainingSet.push({input:usedIndicatorValues, output:result, timestamp:timestamp});
+                this.trainingSet.push({input:noNaNValues, output:result, timestamp:timestamp});
             }
             else
                 break;
@@ -138,7 +146,7 @@ module.exports = class{
         {
             //console.log("Update NN with " + this.trainingSet.length + " samples");
             var trainer = new Synaptic.Trainer(this.network);
-            trainer.train(this.trainingSet.slice(0, this.trainingSet.length), this.networkOptions);
+            trainer.train(this.trainingSet.slice(), this.networkOptions);
         }
     }
 }

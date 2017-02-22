@@ -9,7 +9,7 @@ const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
 
 let gen = new TimeSeriesGenerator();
-let series = gen.generateSeries(gen.complexSeries, 100 * 100, 200);
+let series = gen.generateSeries(gen.normalSeries, 100 * 100, 200);
 
 let collection = new LearningIndicatorCollection();
 
@@ -25,6 +25,13 @@ let condition = function(now, future)
         return 0;
 }
 
+// Add some learning indicators
+
+function rand(min, max)
+{
+    return Math.round(min + Math.random() * (min - max));
+}
+
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
     fastPeriod        : 3 + i,
@@ -32,11 +39,6 @@ for(let i = 1; i < 20; i++)
     signalPeriod      : 1 + Math.floor(i / 2),
     SimpleMAOscillator: false,
     SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
-
-function rand(min, max)
-{
-    return Math.round(min + Math.random() * (min - max));
-}
 
 /*for(let i = 1; i < 30; i++)
     collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
@@ -50,7 +52,9 @@ function rand(min, max)
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, 5, condition));
 
-collection.initNeuralNetwork(5, condition, .0001, 50);
+// End of adding learning indicators
+
+collection.initNeuralNetwork(5, condition, .3, 100);
 
 //The data for the graph
 let ticks = []; //First one is date
@@ -63,22 +67,33 @@ let lastProgress;
 for(let i = 0; i < series.length; i++)
 {
     let thisTick = [];
+    //date
     thisTick.push(series[i].timestamp);
+
+    //PRICE
     thisTick.push(series[i].value);
-    
+
+    //Update indicator collection
     collection.pushTick(series[i]);
 
-    /*if(i % 100 == 0)
+    //Update the NN
+    /*if(i % 10 == 0)
         collection.updateNeuralNetwork();*/
 
+    //OUTCOME
     if(i + 5 < series.length)
         thisTick.push(series[i + 5].value - series[i].value);
     else
         thisTick.push(NaN);
     
+    //PRED
     thisTick.push(collection.getPrediction().value);
-    thisTick.push(collection.getNeuralNetworkPrediction().value);
+    
+    //PREDNN
+    let predNN = collection.getNeuralNetworkPrediction();
+    thisTick.push(predNN.value);
 
+    //Show progress in console
     let progress = Math.round(i / series.length * 100);
     if(lastProgress != progress){
         console.log(Math.round(i / series.length * 100) + "%");
@@ -94,7 +109,7 @@ let predictionAvg_count = 0;
 let predictionNN_success = 0;
 let predictionNN_count = 0;
 
-let threshold = 0.05;
+let threshold = 0.1;
 
 for(let i = 0; i < ticks.length; i++){
     if(ticks[i][OUTCOME] != undefined && isNaN(ticks[i][OUTCOME]) == false){
@@ -115,13 +130,13 @@ for(let i = 0; i < ticks.length; i++){
         //PredictionNN
         if(isNaN(ticks[i][PREDNN]) == false && ticks[i][PREDNN] != undefined)
         {
-            if(ticks[i][PREDNN] > threshold && ticks[i][OUTCOME] > 0)
+            if(ticks[i][PREDNN] > 0 && ticks[i][OUTCOME] > 0)
                 predictionNN_success++;
 
-            if(ticks[i][PREDNN] < -threshold && ticks[i][OUTCOME] < 0)
+            if(ticks[i][PREDNN] < 0 && ticks[i][OUTCOME] < 0)
                 predictionNN_success++;
               
-            if(ticks[i][PREDNN] > threshold || ticks[i][PREDNN] < -threshold)
+            if(ticks[i][PREDNN] > 0 || ticks[i][PREDNN] < 0)
                 predictionNN_count++;
         }
     }
