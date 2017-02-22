@@ -54,9 +54,7 @@ collection.initNeuralNetwork(5, condition, .0001, 50);
 
 //The data for the graph
 let ticks = []; //First one is date
-
 const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4;
-
 let labels = ["date", "price", "price_outcome", "prediction", "prediction_nn"];
 
 let lastProgress;
@@ -70,8 +68,8 @@ for(let i = 0; i < series.length; i++)
     
     collection.pushTick(series[i]);
 
-    if(i % 100 == 0)
-        collection.updateNeuralNetwork();
+    /*if(i % 100 == 0)
+        collection.updateNeuralNetwork();*/
 
     if(i + 5 < series.length)
         thisTick.push(series[i + 5].value - series[i].value);
@@ -91,7 +89,6 @@ for(let i = 0; i < series.length; i++)
 }
 
 //Todo: Get success statistics
-
 let predictionAvg_success = 0;
 let predictionAvg_count = 0;
 let predictionNN_success = 0;
@@ -133,4 +130,7 @@ for(let i = 0; i < ticks.length; i++){
 console.log("pred_avg: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%");
 console.log("pred_nn: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%");
 
-server.start({labels: labels, data:ticks});
+let info = "Pred: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%<br />";
+info += "PrNN: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%";
+
+server.start({labels: labels, data:ticks, info:info});
