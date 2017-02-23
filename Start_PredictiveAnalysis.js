@@ -11,22 +11,44 @@ let server = new WebServer(3000);
 let gen = new TimeSeriesGenerator();
 let series = gen.generateSeries(gen.normalSeries, 100 * 100, 200);
 
-let collection = new LearningIndicatorCollection();
+let outcomeTimeframe = 10;
 
-let condition = function(now, future)
+let outcomeCondition = function(now, future)
 {
     let delta = future[future.length - 1].value - now.value;
 
-    if(delta >= 0.1)
+    if(delta > 0)
         return 1;
-    else if(delta <= -0.1)
+    else if(delta < 0)
         return -1;
     else
         return 0;
 }
 
-// Add some learning indicators
+let predictionOutcomeEvaluation = function(now, future){
+    let threshold = 0.1;
 
+    let delta = future[future.length - 1].value - now.value;    
+
+    if(isNaN(now.avgPrediction) || future[future.length - 1].timestamp == now.timestamp || isNaN(delta))
+        return 0;
+    
+    if((now.avgPrediction > threshold && delta > 0) || (now.avgPrediction < -threshold && delta < 0))
+        return 1;
+
+    else if(now.avgPrediction < threshold && now.avgPrediction > -threshold)
+        return 0;
+
+    else if((now.avgPrediction > threshold && delta < 0) || (now.avgPrediction < -threshold && delta > 0))
+        return -1;
+
+    else
+        throw new Error("Something is not covered here... " + now.avgPrediction + " " + delta);
+}
+
+let collection = new LearningIndicatorCollection(predictionOutcomeEvaluation, outcomeTimeframe, outcomeCondition, 50);
+
+// Add some learning indicators
 function rand(min, max)
 {
     return Math.round(min + Math.random() * (min - max));
@@ -38,7 +60,7 @@ for(let i = 1; i < 20; i++)
     slowPeriod        : 6 + 2 * i,
     signalPeriod      : 1 + Math.floor(i / 2),
     SimpleMAOscillator: false,
-    SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
+    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition));
 
 /*for(let i = 1; i < 30; i++)
     collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
@@ -46,20 +68,20 @@ for(let i = 1; i < 20; i++)
     slowPeriod        : rand(2, 20),
     signalPeriod      : rand(2, 20),
     SimpleMAOscillator: false,
-    SimpleMASignal    : false}), "histogram"), 100, 10, 5, condition));
+    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition));
 */
 
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, 5, condition));
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition));
 
 // End of adding learning indicators
 
-collection.initNeuralNetwork(5, condition, .3, 100);
+collection.initNeuralNetwork(0.3, 100);
 
 //The data for the graph
 let ticks = []; //First one is date
-const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4;
-let labels = ["date", "price", "price_outcome", "prediction", "prediction_nn"];
+const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4, SUCCESS = 5;
+let labels = ["date", "price", "price_outcome", "prediction", "prediction_nn", "success"];
 
 let lastProgress;
 
@@ -81,14 +103,22 @@ for(let i = 0; i < series.length; i++)
         collection.updateNeuralNetwork();*/
 
     //OUTCOME
-    if(i + 5 < series.length)
-        thisTick.push(series[i + 5].value - series[i].value);
+    let futureIndex = i;
+    while(futureIndex < series.length && series[futureIndex].timestamp - series[i].timestamp < outcomeTimeframe)
+        futureIndex++;
+    
+    futureIndex--;
+
+    if(futureIndex > 0 && futureIndex < series.length)
+        thisTick.push(series[futureIndex].value - series[i].value); //Todo How to do live??
     else
         thisTick.push(NaN);
     
+    collection.resolve();
+    
     //PRED
     thisTick.push(collection.getPrediction().value);
-    
+
     //PREDNN
     let predNN = collection.getNeuralNetworkPrediction();
     thisTick.push(predNN.value);
@@ -100,52 +130,10 @@ for(let i = 0; i < series.length; i++)
         lastProgress = progress;
     }
 
+    //SUCCESS
+    thisTick.push(collection.getSuccessRate()); //Todo??
+
     ticks.push(thisTick);
 }
 
-//Todo: Get success statistics
-let predictionAvg_success = 0;
-let predictionAvg_count = 0;
-let predictionNN_success = 0;
-let predictionNN_count = 0;
-
-let threshold = 0.1;
-
-for(let i = 0; i < ticks.length; i++){
-    if(ticks[i][OUTCOME] != undefined && isNaN(ticks[i][OUTCOME]) == false){
-
-        //Prediction AVG
-        if(isNaN(ticks[i][PRED]) == false && ticks[i][PRED] != undefined)
-        {
-            if(ticks[i][PRED] > threshold && ticks[i][OUTCOME] > 0)
-                predictionAvg_success++;
-
-            if(ticks[i][PRED] < -threshold && ticks[i][OUTCOME] < 0)
-                predictionAvg_success++;
-
-            if(ticks[i][PRED] > threshold || ticks[i][PRED] < -threshold)
-                predictionAvg_count++;
-        }
-
-        //PredictionNN
-        if(isNaN(ticks[i][PREDNN]) == false && ticks[i][PREDNN] != undefined)
-        {
-            if(ticks[i][PREDNN] > 0 && ticks[i][OUTCOME] > 0)
-                predictionNN_success++;
-
-            if(ticks[i][PREDNN] < 0 && ticks[i][OUTCOME] < 0)
-                predictionNN_success++;
-              
-            if(ticks[i][PREDNN] > 0 || ticks[i][PREDNN] < 0)
-                predictionNN_count++;
-        }
-    }
-}
-
-console.log("pred_avg: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%");
-console.log("pred_nn: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%");
-
-let info = "Pred: " + Math.round(predictionAvg_success / predictionAvg_count * 100) + "%<br />";
-info += "PrNN: " + Math.round(predictionNN_success / predictionNN_count * 100) + "%";
-
-server.start({labels: labels, data:ticks, info:info});
+server.start({labels: labels, data:ticks, info:undefined});

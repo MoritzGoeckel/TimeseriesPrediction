@@ -1,7 +1,7 @@
 const Synaptic = require('synaptic'); // this line is not needed in the browser
 
 module.exports = class{
-    constructor(){
+    constructor(predictionOutcomeEvaluationFunction, conditionTimeframe, outcomeEvaluationFunction, successHistoryTimeframe){
         this.lis = [];
         this.lastTimestamp = undefined;
         this.currentValues = [];
@@ -9,6 +9,15 @@ module.exports = class{
         this.currentAvgPrediction = undefined;
 
         this.history = [];
+        this.successes = 0;
+        this.success_chances = 0;
+
+        this.conditionTimeframe = conditionTimeframe;
+        this.outcomeEvaluationFunction = outcomeEvaluationFunction;
+        this.predictionOutcomeEvaluationFunction = predictionOutcomeEvaluationFunction;
+
+        this.successHistoryTimeframe = successHistoryTimeframe;
+        this.success_history = [];
     }
 
     addLearningIndicator(indicator){
@@ -35,8 +44,8 @@ module.exports = class{
             predictionSum += pred.value;
         }
 
-        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice()});
         this.currentAvgPrediction = predictionSum / this.lis.length;
+        this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice(), avgPrediction:this.currentAvgPrediction});
     }
 
     getPrediction(){
@@ -51,10 +60,7 @@ module.exports = class{
         return this.currentPredictions;
     }
 
-    initNeuralNetwork(conditionTimeframe, conditionFunction, learningRate, reinforceTimeframe){
-        this.conditionTimeframe = conditionTimeframe;
-        this.conditionFunction = conditionFunction;
-
+    initNeuralNetwork(learningRate, reinforceTimeframe){
         this.networkOptions = {
                 rate: learningRate,
                 iterations: 1,
@@ -86,7 +92,11 @@ module.exports = class{
         return {timestamp:this.lastTimestamp, value:result[0] - result[1], raw:result};
     }
 
-    updateNeuralNetwork(){
+    getSuccessRate(){
+        return this.successes / this.success_chances;
+    }
+
+    resolve(){
         while(this.history.length > 0)
         {
             let foundIndex = undefined;
@@ -101,9 +111,32 @@ module.exports = class{
 
             if(foundIndex != undefined && foundIndex + 1 < this.history.length) //Is there also newer values?
             {
-                //Resolve 0 with i
-                let result = this.conditionFunction(this.history[0], this.history.slice(1, foundIndex + 1)); // result shound be 1 0 -1
-                
+                foundIndex += 1;
+
+                let result = this.outcomeEvaluationFunction(this.history[0], this.history.slice(1, foundIndex + 1));
+                let outcomeEval = this.predictionOutcomeEvaluationFunction(this.history[0], this.history.slice(1, foundIndex + 1));
+
+                if(outcomeEval != 0 && outcomeEval != 1 && outcomeEval != -1)
+                    throw new Error("Eval should be 0 or 1 or -1");
+
+                //Todo: Remove old
+                if(outcomeEval == 1){
+                    this.successes++;
+                    this.success_chances++;
+                    this.success_history.push({timestamp:this.history[0].timestamp, success:1, chance:1});
+                }
+                if(outcomeEval == -1){
+                    this.success_chances++;
+                    this.success_history.push({timestamp:this.history[0].timestamp, success:0, chance:1});                    
+                }
+
+                while(this.success_history.length > 0 && this.lastTimestamp - this.success_history[0].timestamp > this.successHistoryTimeframe)
+                {
+                    let removed = this.success_history.shift();
+                    this.successes -= removed.success;
+                    this.success_chances -= removed.chance;
+                }
+
                 if(result != 0 && result != 1 && result != -1)
                     throw new Error("Result should be 0 or 1 or -1");
 
@@ -141,7 +174,9 @@ module.exports = class{
         while(this.trainingSet.length > 0 && this.trainingSet[0].timestamp + this.networkOptions.batchTimeframe < lastItem.timestamp){
             this.trainingSet.shift();
         }
+    }
 
+    updateNeuralNetwork(){
         if(this.trainingSet.length != 0)
         {
             //console.log("Update NN with " + this.trainingSet.length + " samples");

@@ -51,7 +51,8 @@ module.exports = class{
 
             if(foundIndex != undefined && foundIndex + 1 < this.history.length) //Is there also newer values?
             {
-                //Resolve 0 with i
+                foundIndex += 1;
+
                 let result = this.conditionFunction(this.history[0], this.history.slice(1, foundIndex + 1)); // result shound be 1 0 -1
                 
                 if(result != 0 && result != 1 && result != -1)
