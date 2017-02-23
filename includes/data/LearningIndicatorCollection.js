@@ -114,7 +114,7 @@ module.exports = class{
                 foundIndex += 1;
 
                 let result = this.outcomeEvaluationFunction(this.history[0], this.history.slice(1, foundIndex + 1));
-                let outcomeEval = this.predictionOutcomeEvaluationFunction(this.history[0], this.history.slice(1, foundIndex + 1));
+                let outcomeEval = this.predictionOutcomeEvaluationFunction(this.history[0], this.history.slice(1, foundIndex + 1), result);
 
                 if(outcomeEval != 0 && outcomeEval != 1 && outcomeEval != -1)
                     throw new Error("Eval should be 0 or 1 or -1");

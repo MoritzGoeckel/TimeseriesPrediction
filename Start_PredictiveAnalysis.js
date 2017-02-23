@@ -11,39 +11,38 @@ let server = new WebServer(3000);
 let gen = new TimeSeriesGenerator();
 let series = gen.generateSeries(gen.normalSeries, 100 * 100, 200);
 
-let outcomeTimeframe = 10;
+let outcomeTimeframe = 5;
 
 let outcomeCondition = function(now, future)
 {
     let delta = future[future.length - 1].value - now.value;
 
-    if(delta > 0)
+    if(delta > 0.5)
         return 1;
-    else if(delta < 0)
+    if(delta < -0.5)
         return -1;
-    else
-        return 0;
+    
+    return 0;
 }
 
-let predictionOutcomeEvaluation = function(now, future){
+let predictionOutcomeEvaluation = function(now, future, outcomeCode){
     let threshold = 0.1;
 
-    let delta = future[future.length - 1].value - now.value;    
+    let delta = future[future.length - 1].value - now.value;
 
     if(isNaN(now.avgPrediction) || future[future.length - 1].timestamp == now.timestamp || isNaN(delta))
         return 0;
-    
-    if((now.avgPrediction > threshold && delta > 0) || (now.avgPrediction < -threshold && delta < 0))
+
+    if(now.avgPrediction >= threshold && delta > 0)
         return 1;
 
-    else if(now.avgPrediction < threshold && now.avgPrediction > -threshold)
+    if(now.avgPrediction <= -threshold && delta < 0)
+        return 1;  
+
+    if(now.avgPrediction < threshold && now.avgPrediction > -threshold)
         return 0;
-
-    else if((now.avgPrediction > threshold && delta < 0) || (now.avgPrediction < -threshold && delta > 0))
-        return -1;
-
-    else
-        throw new Error("Something is not covered here... " + now.avgPrediction + " " + delta);
+    
+    return -1;
 }
 
 let collection = new LearningIndicatorCollection(predictionOutcomeEvaluation, outcomeTimeframe, outcomeCondition, 50);
@@ -81,7 +80,7 @@ collection.initNeuralNetwork(0.3, 100);
 //The data for the graph
 let ticks = []; //First one is date
 const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4, SUCCESS = 5;
-let labels = ["date", "price", "price_outcome", "prediction", "prediction_nn", "success"];
+let labels = ["date", "price", "prediction", "prediction_nn", "success"];
 
 let lastProgress;
 
@@ -101,18 +100,6 @@ for(let i = 0; i < series.length; i++)
     //Update the NN
     /*if(i % 10 == 0)
         collection.updateNeuralNetwork();*/
-
-    //OUTCOME
-    let futureIndex = i;
-    while(futureIndex < series.length && series[futureIndex].timestamp - series[i].timestamp < outcomeTimeframe)
-        futureIndex++;
-    
-    futureIndex--;
-
-    if(futureIndex > 0 && futureIndex < series.length)
-        thisTick.push(series[futureIndex].value - series[i].value); //Todo How to do live??
-    else
-        thisTick.push(NaN);
     
     collection.resolve();
     
