@@ -53,25 +53,68 @@ function rand(min, max)
     return Math.round(min + Math.random() * (min - max));
 }
 
+// SMA
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "SMA"));
+
+// EMA
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.EMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "EMA"));
+
+// WMA
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.WMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "WMA"));
+
+// MACD
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
     fastPeriod        : 3 + i,
     slowPeriod        : 6 + 2 * i,
     signalPeriod      : 1 + Math.floor(i / 2),
     SimpleMAOscillator: false,
-    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition));
+    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition, "MACD"));
 
-/*for(let i = 1; i < 30; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
-    fastPeriod        : rand(2, 20),
-    slowPeriod        : rand(2, 20),
-    signalPeriod      : rand(2, 20),
-    SimpleMAOscillator: false,
-    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition));
-*/
+// BB TODO
+/*for(let std = 1; std < 4; std++)
+    for(let i = 1; i < 10; i++)
+        collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.BollingerBands({values : [],
+        period        : 1 + i,
+        stdDev        : std}), "lower / middle / upper"), 100, 10, outcomeTimeframe, outcomeCondition), "BB");*/
 
+        /*lower: 48.07
+        middle: 49.23
+        upper: 50.38999999999999*/
+
+// ATR
+// Heigh low close data required.
+// https://runkit.com/anandaravindan/atr
+
+// RSI
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition));
+    collection.addLearningIndicator(new LearningIndicator(new Indicators.RSI({period : 2 + i, values : []}), 100, 10, outcomeTimeframe, outcomeCondition, "RSI"));
+
+// WEMA
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.WEMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "WEMA"));
+
+// ROC
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new Indicators.ROC({period : 2 + i, values : []}), 100, 10, outcomeTimeframe, outcomeCondition, "ROC"));
+
+// KST
+// https://runkit.com/anandaravindan/kst
+
+// KD
+// https://runkit.com/anandaravindan/stochastic
+
+// W%C
+// https://runkit.com/anandaravindan/williamsr
+
+// ADL
+// https://runkit.com/anandaravindan/adl
+
+// TRX
+// https://runkit.com/anandaravindan/trix
 
 // End of adding learning indicators
 

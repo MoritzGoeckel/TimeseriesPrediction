@@ -32,6 +32,7 @@ module.exports = class{
         this.currentValues = [];
 
         let predictionSum = 0;
+        let countedIndicators = 0;
         for(let a in this.lis){
             this.lis[a].pushTick(entry);
             this.lis[a].resolve();
@@ -41,10 +42,16 @@ module.exports = class{
             this.currentValues.push(this.lis[a].getIndicatorValue().value);
             this.currentPredictions.push(pred.value);
 
-            predictionSum += pred.value;
+            if(pred.value == undefined || isNaN(pred.value) || pred.value == null){
+                console.log("Prediction not valid: " + JSON.stringify(pred.value) + " -> " + JSON.stringify(pred.indicator));
+            }
+            else{
+                predictionSum += pred.value;
+                countedIndicators++;
+            }
         }
 
-        this.currentAvgPrediction = predictionSum / this.lis.length;
+        this.currentAvgPrediction = predictionSum / countedIndicators;
         this.history.push({timestamp:entry.timestamp, value:entry.value, indicators:this.currentValues.slice(), avgPrediction:this.currentAvgPrediction});
     }
 

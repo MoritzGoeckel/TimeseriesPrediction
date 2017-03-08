@@ -1,13 +1,17 @@
 //https://www.npmjs.com/package/technicalindicators
 
 module.exports = class{
-    constructor(indicator, learningPeriod, lookupResolution, conditionTimeframe, conditionFunction){
+    constructor(indicator, learningPeriod, lookupResolution, conditionTimeframe, conditionFunction, name){
         this.lastRecievedTimestamp = -1;
 
         this.lookupTable = {};
         this.lookupResolution = lookupResolution;
 
         this.indicator = indicator;
+
+        if(this.indicator == undefined)
+            throw new Error("Indicator undefined");
+
         this.learningPeriod = learningPeriod;
         this.history = [];
         this.conditionFunction = conditionFunction;
@@ -16,6 +20,11 @@ module.exports = class{
 
         this.maxSeenValue = -100000;
         this.minSeenValue = 100000;
+
+        this.name = name;
+
+        if(this.name == undefined)
+            throw new Error("Name undefined");            
     }
 
     pushTick(entry){
@@ -84,10 +93,11 @@ module.exports = class{
         let stepsize = (this.maxSeenValue - this.minSeenValue) / this.lookupResolution;
         let usedIndicatorValue = Math.floor((this.lastIndicatorValue - this.minSeenValue) / stepsize);
 
-        if(this.lookupTable[usedIndicatorValue] != undefined)
-            return {value:this.lookupTable[usedIndicatorValue].value, timestamp:this.lastRecievedTimestamp};
+        if(this.lookupTable[usedIndicatorValue] != undefined){
+            return {value:this.lookupTable[usedIndicatorValue].value, timestamp:this.lastRecievedTimestamp, indicator:this.name};
+        }
         else
-            return {value:undefined, timestamp:this.lastRecievedTimestamp};
+            return {value:NaN, timestamp:this.lastRecievedTimestamp, indicator:this.name};
     }
 
     getIndicatorValue()

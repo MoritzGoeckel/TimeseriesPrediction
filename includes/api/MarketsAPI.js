@@ -40,7 +40,7 @@ module.exports.getMarkets = function (callback)
                     possibleMarkets.push(obj);
             }
 
-            possibleMarkets = possibleMarkets.sort(function(a, b){ return b.usdmedian - a.usdmedian; })
+            possibleMarkets = possibleMarkets.sort(function(a,b) {return (a.usdmedian > b.usdmedian) ? 1 : ((b.usdmedian > a.usdmedian) ? -1 : 0);})
             callback(possibleMarkets);
         });
     });
