@@ -4,6 +4,7 @@ const LearningIndicator = require("./includes/data/LearningIndicator.js");
 const Indicators = require('technicalindicators');
 const ValueMinusIndicator = require("./includes/data/indicator_wrapper/ValueMinusIndicator.js");
 const ChooseAttributeIndicator = require("./includes/data/indicator_wrapper/ChooseAttributeIndicator.js");
+const LowerMiddleUpperIndicator = require("./includes/data/indicator_wrapper/LowerMiddleUpperIndicator.js");
 
 const WebServer = require("./includes/api/WebServer.js");
 let server = new WebServer(3000);
@@ -74,20 +75,12 @@ for(let i = 1; i < 20; i++)
     SimpleMAOscillator: false,
     SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition, "MACD"));
 
-// BB TODO
-/*for(let std = 1; std < 4; std++)
+// BB
+for(let std = 1; std < 4; std++)
     for(let i = 1; i < 10; i++)
-        collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.BollingerBands({values : [],
-        period        : 1 + i,
-        stdDev        : std}), "lower / middle / upper"), 100, 10, outcomeTimeframe, outcomeCondition), "BB");*/
-
-        /*lower: 48.07
-        middle: 49.23
-        upper: 50.38999999999999*/
-
-// ATR
-// Heigh low close data required.
-// https://runkit.com/anandaravindan/atr
+        collection.addLearningIndicator(new LearningIndicator(new LowerMiddleUpperIndicator(new Indicators.BollingerBands({values : [],
+        period: 1 + i,
+        stdDev: std}), "lower / middle / upper"), 100, 10, outcomeTimeframe, outcomeCondition, "BB"));
 
 // RSI
 for(let i = 1; i < 20; i++)
@@ -101,20 +94,38 @@ for(let i = 1; i < 20; i++)
 for(let i = 1; i < 20; i++)
     collection.addLearningIndicator(new LearningIndicator(new Indicators.ROC({period : 2 + i, values : []}), 100, 10, outcomeTimeframe, outcomeCondition, "ROC"));
 
+// TRX
+for(let i = 1; i < 20; i++)
+    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.TRIX({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "TRIX"));
+
 // KST
 // https://runkit.com/anandaravindan/kst
+// = kst?
+/*var input = {
+  values: [],
+  ROCPer1     : 10,
+  ROCPer2     : 15,
+  ROCPer3     : 20,
+  ROCPer4     : 30,
+  SMAROCPer1  : 10,
+  SMAROCPer2  : 10,
+  SMAROCPer3  : 10,
+  SMAROCPer4  : 15,
+  signalPeriod: 3
+};*/
 
-// KD
+// KD (Needs heigh low close)
 // https://runkit.com/anandaravindan/stochastic
 
-// W%C
+// W%C (Needs heigh low close)
 // https://runkit.com/anandaravindan/williamsr
 
-// ADL
+// ADL (Needs heigh low close volume)
 // https://runkit.com/anandaravindan/adl
 
-// TRX
-// https://runkit.com/anandaravindan/trix
+// ATR
+// Heigh low close data required.
+// https://runkit.com/anandaravindan/atr
 
 // End of adding learning indicators
 
