@@ -1,6 +1,8 @@
-const LearningIndicatorCollection = require("./includes/data/LearningIndicatorCollection.js");
+const IndicatorCollection = require("./includes/data/IndicatorCollection.js");
 const TimeSeriesGenerator = require("./includes/data/TimeSeriesGenerator.js");
-const LearningIndicator = require("./includes/data/LearningIndicator.js");
+const Indicator = require("./includes/data/Indicator.js");
+const Resolver = require("./includes/data/Resolver.js");
+const LookupSystem = require("./includes/data/predictionsystems/LookupSystem.js");
 const Indicators = require('technicalindicators');
 const ValueMinusIndicator = require("./includes/data/indicator_wrapper/ValueMinusIndicator.js");
 const ChooseAttributeIndicator = require("./includes/data/indicator_wrapper/ChooseAttributeIndicator.js");
@@ -46,7 +48,8 @@ let predictionOutcomeEvaluation = function(now, future, outcomeCode){
     return -1;
 }
 
-let collection = new LearningIndicatorCollection(predictionOutcomeEvaluation, outcomeTimeframe, outcomeCondition, 50);
+let resolver = new Resolver([new LookupSystem(100, 10)], outcomeTimeframe, outcomeCondition);
+let collection = new IndicatorCollection(resolver, []);
 
 // Add some learning indicators
 function rand(min, max)
@@ -56,47 +59,47 @@ function rand(min, max)
 
 // SMA
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "SMA"));
+    collection.addIndicator(new Indicator(new ValueMinusIndicator(new Indicators.SMA({period : 2 + i, values : []})), "SMA"));
 
 // EMA
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.EMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "EMA"));
+    collection.addIndicator(new Indicator(new ValueMinusIndicator(new Indicators.EMA({period : 2 + i, values : []})), "EMA"));
 
 // WMA
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.WMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "WMA"));
+    collection.addIndicator(new Indicator(new ValueMinusIndicator(new Indicators.WMA({period : 2 + i, values : []})), "WMA"));
 
 // MACD
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
+    collection.addIndicator(new Indicator(new ChooseAttributeIndicator(new Indicators.MACD({values : [],
     fastPeriod        : 3 + i,
     slowPeriod        : 6 + 2 * i,
     signalPeriod      : 1 + Math.floor(i / 2),
     SimpleMAOscillator: false,
-    SimpleMASignal    : false}), "histogram"), 100, 10, outcomeTimeframe, outcomeCondition, "MACD"));
+    SimpleMASignal    : false}), "histogram"), "MACD"));
 
 // BB
 for(let std = 1; std < 4; std++)
     for(let i = 1; i < 10; i++)
-        collection.addLearningIndicator(new LearningIndicator(new LowerMiddleUpperIndicator(new Indicators.BollingerBands({values : [],
+        collection.addIndicator(new Indicator(new LowerMiddleUpperIndicator(new Indicators.BollingerBands({values : [],
         period: 1 + i,
-        stdDev: std}), "lower / middle / upper"), 100, 10, outcomeTimeframe, outcomeCondition, "BB"));
+        stdDev: std}), "lower / middle / upper"), "BB"));
 
 // RSI
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new Indicators.RSI({period : 2 + i, values : []}), 100, 10, outcomeTimeframe, outcomeCondition, "RSI"));
+    collection.addIndicator(new Indicator(new Indicators.RSI({period : 2 + i, values : []}), "RSI"));
 
 // WEMA
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.WEMA({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "WEMA"));
+    collection.addIndicator(new Indicator(new ValueMinusIndicator(new Indicators.WEMA({period : 2 + i, values : []})), "WEMA"));
 
 // ROC
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new Indicators.ROC({period : 2 + i, values : []}), 100, 10, outcomeTimeframe, outcomeCondition, "ROC"));
+    collection.addIndicator(new Indicator(new Indicators.ROC({period : 2 + i, values : []}), "ROC"));
 
 // TRX
 for(let i = 1; i < 20; i++)
-    collection.addLearningIndicator(new LearningIndicator(new ValueMinusIndicator(new Indicators.TRIX({period : 2 + i, values : []})), 100, 10, outcomeTimeframe, outcomeCondition, "TRIX"));
+    collection.addIndicator(new Indicator(new ValueMinusIndicator(new Indicators.TRIX({period : 2 + i, values : []})), "TRIX"));
 
 // KST
 // https://runkit.com/anandaravindan/kst
@@ -129,12 +132,10 @@ for(let i = 1; i < 20; i++)
 
 // End of adding learning indicators
 
-collection.initNeuralNetwork(0.3, 100);
-
 //The data for the graph
 let ticks = []; //First one is date
 const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4, SUCCESS = 5;
-let labels = ["date", "price", "prediction", "prediction_nn", "success"];
+let labels = ["date", "price", "pred"]; //"success"
 
 let lastProgress;
 
@@ -157,12 +158,11 @@ for(let i = 0; i < series.length; i++)
     
     collection.resolve();
     
-    //PRED
-    thisTick.push(collection.getPrediction().value);
-
-    //PREDNN
-    let predNN = collection.getNeuralNetworkPrediction();
-    thisTick.push(predNN.value);
+    //PRED (Can be more...)
+    let predictions = collection.getPredictions();
+    //console.log(predictions);
+    for(let p = 0; p < predictions.length; p++)
+        thisTick.push(predictions[p].value);
 
     //Show progress in console
     let progress = Math.round(i / series.length * 100);
@@ -172,7 +172,7 @@ for(let i = 0; i < series.length; i++)
     }
 
     //SUCCESS
-    thisTick.push(collection.getSuccessRate()); //Todo??
+    //thisTick.push(collection.getSuccessRate()); //Todo??
 
     ticks.push(thisTick);
 }
