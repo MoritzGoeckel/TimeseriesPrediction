@@ -1,5 +1,7 @@
 const Synaptic = require('synaptic');
 
+//TODO
+
 module.exports = class{
     constructor(learningRate, reinforceTimeframe)
     {

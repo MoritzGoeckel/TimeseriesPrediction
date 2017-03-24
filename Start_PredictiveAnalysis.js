@@ -14,7 +14,7 @@ let server = new WebServer(3000);
 let gen = new TimeSeriesGenerator();
 let series = gen.generateSeries(gen.complexSeries, 100 * 100, 200);
 
-let outcomeTimeframe = 5;
+let outcomeTimeframe = 1;
 
 let outcomeCondition = function(now, future)
 {

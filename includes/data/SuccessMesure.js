@@ -1,3 +1,6 @@
+    
+    //TODO: !!
+    
     constructor(predictionOutcomeEvaluationFunction, conditionTimeframe, outcomeEvaluationFunction, successHistoryTimeframe){
         this.indicators = [];
         this.lastTimestamp = undefined;
