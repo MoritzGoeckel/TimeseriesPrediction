@@ -18,6 +18,14 @@ module.exports = class{
         return predictions;
     }
 
+    getPredictionSystemNames(){
+        let names = [];
+        for(let i = 0; i < this.predictionSystems.length; i++)
+            names.push(this.predictionSystems[i].getName());
+
+        return names;
+    }
+
     resolve(){
         while(this.history.length > 0)
         {

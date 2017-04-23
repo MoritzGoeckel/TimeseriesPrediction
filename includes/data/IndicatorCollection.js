@@ -38,4 +38,8 @@ module.exports = class{
     getPredictions(){
         return this.resolver.getPredictions(this.currentValues);
     }
+
+    getPredictionSystemNames(){
+        return this.resolver.getPredictionSystemNames();
+    }
 }

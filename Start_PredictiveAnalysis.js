@@ -3,6 +3,11 @@ const TimeSeriesGenerator = require("./includes/data/TimeSeriesGenerator.js");
 const Indicator = require("./includes/data/Indicator.js");
 const Resolver = require("./includes/data/Resolver.js");
 const LookupSystem = require("./includes/data/predictionsystems/LookupSystem.js");
+const SupportVectorSystem = require("./includes/data/predictionsystems/SupportVectorSystem.js");
+const Alternative_SupportVectorSystem = require("./includes/data/predictionsystems/Alternative_SupportVectorSystem.js");
+const RegressionSystem = require("./includes/data/predictionsystems/RegressionSystem.js");
+
+
 const Indicators = require('technicalindicators');
 const ValueMinusIndicator = require("./includes/data/indicator_wrapper/ValueMinusIndicator.js");
 const ChooseAttributeIndicator = require("./includes/data/indicator_wrapper/ChooseAttributeIndicator.js");
@@ -48,7 +53,13 @@ let predictionOutcomeEvaluation = function(now, future, outcomeCode){
     return -1;
 }
 
-let resolver = new Resolver([new LookupSystem(100, 10)], outcomeTimeframe, outcomeCondition);
+let predictiveSystems = [];
+predictiveSystems.push(new LookupSystem(100, 10));
+//predictiveSystems.push(new SupportVectorSystem(100, 30));
+//predictiveSystems.push(new Alternative_SupportVectorSystem(100, 30));
+//predictiveSystems.push(new RegressionSystem(100, 30));
+
+let resolver = new Resolver(predictiveSystems, outcomeTimeframe, outcomeCondition);
 let collection = new IndicatorCollection(resolver, []);
 
 // Add some learning indicators
@@ -134,8 +145,11 @@ for(let i = 1; i < 20; i++)
 
 //The data for the graph
 let ticks = []; //First one is date
-const PRICE = 1, OUTCOME = 2, PRED = 3, PREDNN = 4, SUCCESS = 5;
-let labels = ["date", "price", "pred"]; //"success"
+let labels = ["date", "price"]; //"success"
+
+let names = collection.getPredictionSystemNames();
+for(let i = 0; i < names.length; i++)
+    labels.push(names[i]);
 
 let lastProgress;
 
@@ -183,3 +197,5 @@ server.start({labels: labels, data:ticks, info:undefined});
 //https://github.com/karpathy/forestjs
 
 //Extract ai from indicator collection
+
+//TODO: Prediction -> Threshold + Successrate
